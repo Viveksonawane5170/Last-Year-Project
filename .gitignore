@@ -1,10 +1,49 @@
-__pycache__/
-*.pyc
-logs/
-*.log
-data/raw/*/*.csv
-data/processed/*/*.csv
-models/*/*.pkl
+# Virtual Environment
 .venv/
 venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated data
+data/processed/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Model artifacts
+# Uncomment if models should NOT be stored in Git
+# models/
+
+# Python build files
+build/
+dist/
+*.egg-info/
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
