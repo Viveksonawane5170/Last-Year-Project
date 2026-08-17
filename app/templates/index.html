@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <h1>Mental Health, Brain Stroke & Diabetes Prediction</h1>
+    <p>Choose a module to get a prediction:</p>
+    <ul class="module-list">
+        <li><a href="{{ url_for('mental_health') }}">Mental Health Risk Detection (text input)</a></li>
+        <li><a href="{{ url_for('stroke') }}">Brain Stroke Risk Prediction (clinical data)</a></li>
+        <li><a href="{{ url_for('diabetes') }}">Diabetes Risk Prediction (clinical data)</a></li>
+    </ul>
+{% endblock %}

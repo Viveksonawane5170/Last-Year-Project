@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Brain Stroke{% endblock %}
+{% block content %}
+    <h1>Brain Stroke Risk Prediction</h1>
+
+    <form method="POST">
+        <label>Gender
+            <select name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </label>
+
+        <label>Age <input type="number" name="age" min="0" max="120" value="{{ form_data.get('age', 45) }}"></label>
+
+        <label>Hypertension
+            <select name="hypertension">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </label>
+
+        <label>Heart Disease
+            <select name="heart_disease">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </label>
+
+        <label>Ever Married
+            <select name="ever_married">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </label>
+
+        <label>Work Type
+            <select name="work_type">
+                <option value="Private">Private</option>
+                <option value="Self-employed">Self-employed</option>
+                <option value="Govt_job">Govt_job</option>
+                <option value="children">children</option>
+                <option value="Never_worked">Never_worked</option>
+            </select>
+        </label>
+
+        <label>Residence Type
+            <select name="residence_type">
+                <option value="Urban">Urban</option>
+                <option value="Rural">Rural</option>
+            </select>
+        </label>
+
+        <label>Avg Glucose Level <input type="number" step="0.1" name="avg_glucose_level" value="{{ form_data.get('avg_glucose_level', 100) }}"></label>
+
+        <label>BMI <input type="number" step="0.1" name="bmi" value="{{ form_data.get('bmi', 25) }}"></label>
+
+        <label>Smoking Status
+            <select name="smoking_status">
+                <option value="never smoked">never smoked</option>
+                <option value="formerly smoked">formerly smoked</option>
+                <option value="smokes">smokes</option>
+                <option value="Unknown">Unknown</option>
+            </select>
+        </label>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if result %}
+        <div class="result">
+            <p><strong>Prediction:</strong> {{ result.label }}</p>
+            {% if result.confidence %}
+                <p><strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

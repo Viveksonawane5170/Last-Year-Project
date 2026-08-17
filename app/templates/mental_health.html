@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Mental Health{% endblock %}
+{% block content %}
+    <h1>Mental Health Risk Detection</h1>
+    <p>Paste a social media post / text sample below.</p>
+
+    <form method="POST">
+        <textarea name="text" rows="6" placeholder="Enter text here...">{{ text_value }}</textarea>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if result %}
+        <div class="result">
+            <p><strong>Prediction:</strong> {{ result.prediction }}</p>
+            {% if result.confidence %}
+                <p><strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

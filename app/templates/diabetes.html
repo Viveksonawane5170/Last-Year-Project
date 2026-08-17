@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Diabetes{% endblock %}
+{% block content %}
+    <h1>Diabetes Risk Prediction</h1>
+
+    <form method="POST">
+        <label>Pregnancies <input type="number" name="pregnancies" value="{{ form_data.get('pregnancies', 1) }}"></label>
+        <label>Glucose <input type="number" name="glucose" value="{{ form_data.get('glucose', 120) }}"></label>
+        <label>Blood Pressure <input type="number" name="blood_pressure" value="{{ form_data.get('blood_pressure', 70) }}"></label>
+        <label>Skin Thickness <input type="number" name="skin_thickness" value="{{ form_data.get('skin_thickness', 20) }}"></label>
+        <label>Insulin <input type="number" name="insulin" value="{{ form_data.get('insulin', 80) }}"></label>
+        <label>BMI <input type="number" step="0.1" name="bmi" value="{{ form_data.get('bmi', 25) }}"></label>
+        <label>Diabetes Pedigree Function <input type="number" step="0.01" name="dpf" value="{{ form_data.get('dpf', 0.5) }}"></label>
+        <label>Age <input type="number" name="age" value="{{ form_data.get('age', 30) }}"></label>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if result %}
+        <div class="result">
+            <p><strong>Prediction:</strong> {{ result.label }}</p>
+            {% if result.confidence %}
+                <p><strong>Confidence:</strong> {{ "%.2f"|format(result.confidence * 100) }}%</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
