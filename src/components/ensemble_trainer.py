@@ -1,6 +1,6 @@
 import os
+import sys
 import csv
-import numpy as np
 
 from sklearn.ensemble import (
     VotingClassifier,
@@ -33,16 +33,26 @@ class EnsembleTrainer:
         self.module_name = module_name
 
         self.config = {
+
             "diabetes": {
-                "model_path": "models/diabetes/best_ensemble_model.pkl",
+                "model_path": "models/diabetes/best_model.pkl",
                 "result_path": "results/diabetes/ensemble_comparison.csv"
             },
 
             "stroke": {
-                "model_path": "models/stroke/best_ensemble_model.pkl",
+                "model_path": "models/stroke/best_model.pkl",
                 "result_path": "results/stroke/ensemble_comparison.csv"
+            },
+
+            "mental_health": {
+                "model_path": "models/mental_health/best_model.pkl",
+                "result_path": "results/mental_health/ensemble_comparison.csv"
             }
         }
+
+    # ---------------------------------------------------------
+    # CREATE BASE MODELS
+    # ---------------------------------------------------------
 
     def create_base_models(self):
 
@@ -88,11 +98,18 @@ class EnsembleTrainer:
 
         return models
 
+    # ---------------------------------------------------------
+    # EVALUATE MODEL
+    # ---------------------------------------------------------
+
     def evaluate_model(self, model, X_test, y_test):
 
         predictions = model.predict(X_test)
 
-        accuracy = accuracy_score(y_test, predictions)
+        accuracy = accuracy_score(
+            y_test,
+            predictions
+        )
 
         precision = precision_score(
             y_test,
@@ -146,6 +163,10 @@ class EnsembleTrainer:
             "confusion_matrix": cm.tolist()
         }
 
+    # ---------------------------------------------------------
+    # ENSEMBLE TRAINING
+    # ---------------------------------------------------------
+
     def initiate_ensemble_training(
         self,
         X_train,
@@ -171,9 +192,9 @@ class EnsembleTrainer:
 
             results = {}
 
-            # ------------------------------------------------
-            # 1. Individual Models
-            # ------------------------------------------------
+            # =================================================
+            # 1. INDIVIDUAL MODELS
+            # =================================================
 
             for name, model in base_models.items():
 
@@ -192,68 +213,90 @@ class EnsembleTrainer:
 
                 results[name] = metrics
 
-                print(f"{name}")
+                print(name)
+
                 print(
                     f"Accuracy : {metrics['accuracy']:.4f}"
                 )
+
                 print(
                     f"Precision: {metrics['precision']:.4f}"
                 )
+
                 print(
                     f"Recall   : {metrics['recall']:.4f}"
                 )
+
                 print(
                     f"F1 Score : {metrics['f1_score']:.4f}"
                 )
-                print(
-                    f"ROC-AUC  : {metrics['roc_auc']:.4f}"
-                )
 
-            # ------------------------------------------------
-            # 2. Hard Voting
-            # ------------------------------------------------
+                if metrics["roc_auc"] is not None:
+
+                    print(
+                        f"ROC-AUC  : {metrics['roc_auc']:.4f}"
+                    )
+
+            # =================================================
+            # 2. HARD VOTING
+            # =================================================
 
             print("\nTraining Hard Voting...")
 
             hard_voting = VotingClassifier(
+
                 estimators=[
-                    ("dt", DecisionTreeClassifier(
-                        max_depth=5,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42
-                    )),
 
-                    ("rf", RandomForestClassifier(
-                        n_estimators=300,
-                        max_depth=10,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42,
-                        n_jobs=-1
-                    )),
+                    (
+                        "dt",
+                        DecisionTreeClassifier(
+                            max_depth=5,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42
+                        )
+                    ),
 
-                    ("gb", GradientBoostingClassifier(
-                        n_estimators=200,
-                        learning_rate=0.05,
-                        max_depth=3,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42
-                    )),
+                    (
+                        "rf",
+                        RandomForestClassifier(
+                            n_estimators=300,
+                            max_depth=10,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42,
+                            n_jobs=-1
+                        )
+                    ),
 
-                    ("xgb", XGBClassifier(
-                        n_estimators=200,
-                        max_depth=3,
-                        learning_rate=0.05,
-                        subsample=0.9,
-                        colsample_bytree=0.9,
-                        min_child_weight=3,
-                        gamma=0,
-                        eval_metric="logloss",
-                        random_state=42
-                    ))
+                    (
+                        "gb",
+                        GradientBoostingClassifier(
+                            n_estimators=200,
+                            learning_rate=0.05,
+                            max_depth=3,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42
+                        )
+                    ),
+
+                    (
+                        "xgb",
+                        XGBClassifier(
+                            n_estimators=200,
+                            max_depth=3,
+                            learning_rate=0.05,
+                            subsample=0.9,
+                            colsample_bytree=0.9,
+                            min_child_weight=3,
+                            gamma=0,
+                            eval_metric="logloss",
+                            random_state=42
+                        )
+                    )
                 ],
+
                 voting="hard"
             )
 
@@ -271,64 +314,83 @@ class EnsembleTrainer:
             results["Hard Voting"] = hard_metrics
 
             print("Hard Voting")
+
             print(
                 f"Accuracy : {hard_metrics['accuracy']:.4f}"
             )
+
             print(
                 f"Precision: {hard_metrics['precision']:.4f}"
             )
+
             print(
                 f"Recall   : {hard_metrics['recall']:.4f}"
             )
+
             print(
                 f"F1 Score : {hard_metrics['f1_score']:.4f}"
             )
 
-            # ------------------------------------------------
-            # 3. Soft Voting
-            # ------------------------------------------------
+            # =================================================
+            # 3. SOFT VOTING
+            # =================================================
 
             print("\nTraining Soft Voting...")
 
             soft_voting = VotingClassifier(
+
                 estimators=[
-                    ("dt", DecisionTreeClassifier(
-                        max_depth=5,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42
-                    )),
 
-                    ("rf", RandomForestClassifier(
-                        n_estimators=300,
-                        max_depth=10,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42,
-                        n_jobs=-1
-                    )),
+                    (
+                        "dt",
+                        DecisionTreeClassifier(
+                            max_depth=5,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42
+                        )
+                    ),
 
-                    ("gb", GradientBoostingClassifier(
-                        n_estimators=200,
-                        learning_rate=0.05,
-                        max_depth=3,
-                        min_samples_split=5,
-                        min_samples_leaf=2,
-                        random_state=42
-                    )),
+                    (
+                        "rf",
+                        RandomForestClassifier(
+                            n_estimators=300,
+                            max_depth=10,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42,
+                            n_jobs=-1
+                        )
+                    ),
 
-                    ("xgb", XGBClassifier(
-                        n_estimators=200,
-                        max_depth=3,
-                        learning_rate=0.05,
-                        subsample=0.9,
-                        colsample_bytree=0.9,
-                        min_child_weight=3,
-                        gamma=0,
-                        eval_metric="logloss",
-                        random_state=42
-                    ))
+                    (
+                        "gb",
+                        GradientBoostingClassifier(
+                            n_estimators=200,
+                            learning_rate=0.05,
+                            max_depth=3,
+                            min_samples_split=5,
+                            min_samples_leaf=2,
+                            random_state=42
+                        )
+                    ),
+
+                    (
+                        "xgb",
+                        XGBClassifier(
+                            n_estimators=200,
+                            max_depth=3,
+                            learning_rate=0.05,
+                            subsample=0.9,
+                            colsample_bytree=0.9,
+                            min_child_weight=3,
+                            gamma=0,
+                            eval_metric="logloss",
+                            random_state=42
+                        )
+                    )
                 ],
+
                 voting="soft"
             )
 
@@ -346,25 +408,32 @@ class EnsembleTrainer:
             results["Soft Voting"] = soft_metrics
 
             print("Soft Voting")
+
             print(
                 f"Accuracy : {soft_metrics['accuracy']:.4f}"
             )
+
             print(
                 f"Precision: {soft_metrics['precision']:.4f}"
             )
+
             print(
                 f"Recall   : {soft_metrics['recall']:.4f}"
             )
+
             print(
                 f"F1 Score : {soft_metrics['f1_score']:.4f}"
             )
-            print(
-                f"ROC-AUC  : {soft_metrics['roc_auc']:.4f}"
-            )
 
-            # ------------------------------------------------
-            # 4. Find Best Model
-            # ------------------------------------------------
+            if soft_metrics["roc_auc"] is not None:
+
+                print(
+                    f"ROC-AUC  : {soft_metrics['roc_auc']:.4f}"
+                )
+
+            # =================================================
+            # 4. FIND BEST MODEL
+            # =================================================
 
             best_name = max(
                 results,
@@ -375,9 +444,9 @@ class EnsembleTrainer:
                 best_name
             ]["f1_score"]
 
-            # ------------------------------------------------
-            # 5. Get Best Model Object
-            # ------------------------------------------------
+            # =================================================
+            # 5. GET BEST MODEL OBJECT
+            # =================================================
 
             if best_name == "Hard Voting":
 
@@ -393,9 +462,9 @@ class EnsembleTrainer:
                     best_name
                 ]
 
-            # ------------------------------------------------
-            # 6. Save Best Ensemble Model
-            # ------------------------------------------------
+            # =================================================
+            # 6. SAVE FINAL BEST MODEL
+            # =================================================
 
             model_path = self.config[
                 self.module_name
@@ -411,9 +480,13 @@ class EnsembleTrainer:
                 best_model
             )
 
-            # ------------------------------------------------
-            # 7. Save Comparison CSV
-            # ------------------------------------------------
+            print(
+                f"\nFinal model saved at: {model_path}"
+            )
+
+            # =================================================
+            # 7. SAVE COMPARISON CSV
+            # =================================================
 
             result_path = self.config[
                 self.module_name
@@ -452,9 +525,9 @@ class EnsembleTrainer:
                         metrics["roc_auc"]
                     ])
 
-            # ------------------------------------------------
-            # 8. Final Output
-            # ------------------------------------------------
+            # =================================================
+            # 8. FINAL OUTPUT
+            # =================================================
 
             print("\n" + "=" * 60)
 
