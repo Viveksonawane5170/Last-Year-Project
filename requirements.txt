@@ -7,3 +7,5 @@ flask
 dill
 jupyter
 openpyxl
+xgboost
+imbalanced-learn    
