@@ -15,6 +15,18 @@ import os
 import sys
 
 import pandas as pd
+import numpy as np
+
+from src.exception import CustomException
+from src.logger import logging
+from src.utils import load_object
+from src.components.data_transformation import clean_text
+
+import os
+import sys
+
+import pandas as pd
+import numpy as np
 
 from src.exception import CustomException
 from src.logger import logging
